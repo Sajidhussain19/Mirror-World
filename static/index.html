@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mirror World — test decisions on a simulated India</title>
+<meta name="description" content="Simulate how 1,000 grounded Indian personas react to any policy, product or price change, before you ship it. Powered by NVIDIA Nemotron on Nebius Token Factory.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><span></span><span></span></div>
+    <div>
+      <h1>Mirror World</h1>
+      <p class="tag">Rehearse any decision on a simulated India before reality votes.</p>
+    </div>
+  </div>
+  <div class="top-right">
+    <span id="modeBadge" class="badge">…</span>
+    <button id="engineBtn" class="ghost small" title="Token Factory usage">Engine room</button>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- LEFT: composer -->
+  <aside class="panel composer">
+    <label class="lbl" for="proposal">What are you about to decide?</label>
+    <textarea id="proposal" rows="6" placeholder="e.g. We will charge ₹15 extra on every food order during heavy rain, paid directly to delivery partners."></textarea>
+
+    <div class="lbl">Who should react?</div>
+    <div id="audiences" class="chips"></div>
+
+    <div class="row2">
+      <div>
+        <div class="lbl">Society size <b id="sizeVal">300</b></div>
+        <input id="size" type="range" min="100" max="1000" step="50" value="300">
+      </div>
+      <div>
+        <div class="lbl">Rounds of word-of-mouth <b id="roundsVal">3</b></div>
+        <input id="rounds" type="range" min="1" max="4" step="1" value="3">
+      </div>
+    </div>
+    <label class="toggle"><input id="news" type="checkbox" checked> <span>Agents read today's news first <em>(Tavily)</em></span></label>
+
+    <button id="runBtn" class="primary">Simulate society <span class="kbd">⌘↵</span></button>
+
+    <div class="lbl mt">Try one</div>
+    <div id="examples" class="list"></div>
+
+    <div class="lbl mt">Backtest against history <span class="hint">Can it predict what really happened?</span></div>
+    <div id="backtests" class="list"></div>
+  </aside>
+
+  <!-- CENTER: map -->
+  <section class="panel stage">
+    <div class="stage-head">
+      <div id="phase" class="phase">Pick a scenario or write your own. Every dot is a person.</div>
+      <div id="progress" class="progress"><i></i></div>
+    </div>
+    <div class="map-wrap">
+      <canvas id="map"></canvas>
+      <div id="tip" class="tip" hidden></div>
+      <div class="legend">
+        <span><i style="--c:var(--s-2)"></i>Strongly against</span>
+        <span><i style="--c:var(--s-1)"></i>Against</span>
+        <span><i style="--c:var(--s0)"></i>Don't care</span>
+        <span><i style="--c:var(--s1)"></i>For</span>
+        <span><i style="--c:var(--s2)"></i>Strongly for</span>
+        <span class="muted">· lines = word of mouth · click a person to interview them</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: live numbers -->
+  <aside class="panel live">
+    <div class="kpis">
+      <div class="kpi big">
+        <div class="k-l">Net sentiment</div>
+        <div id="kNet" class="k-v">—</div>
+        <div class="gauge"><i id="gNeedle"></i></div>
+        <div class="gauge-l"><span>−2</span><span>0</span><span>+2</span></div>
+      </div>
+      <div class="kpi"><div class="k-l">Would go along</div><div id="kAdopt" class="k-v">—</div></div>
+      <div class="kpi"><div class="k-l">Would spread it</div><div id="kViral" class="k-v">—</div></div>
+    </div>
+    <div class="split" id="split"><i class="o"></i><i class="n"></i><i class="s"></i></div>
+    <div class="split-l"><span id="pO">Against —</span><span id="pN">Neutral —</span><span id="pS">For —</span></div>
+    <div class="lbl mt">Opinion over rounds</div>
+    <svg id="spark" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+    <div class="lbl mt">Voices <span class="hint" id="voiceCount"></span></div>
+    <div id="feed" class="feed"></div>
+  </aside>
+</main>
+
+<section id="results" class="results" hidden>
+  <div id="backtestCard" class="panel bt" hidden></div>
+  <div id="abCard" class="panel ab" hidden></div>
+  <div class="res-grid">
+    <div class="panel verdict" id="verdict">
+      <div class="lbl">Verdict · Nemotron Ultra</div>
+      <div class="skeleton">Waiting for the society to finish talking…</div>
+    </div>
+    <div class="panel">
+      <div class="lbl">Who feels what</div>
+      <div id="segTabs" class="tabs"></div>
+      <div id="segments" class="segments"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="lbl">Why: themes mined from every voice · Nemotron Super</div>
+    <div id="themes" class="themes"></div>
+  </div>
+  <div class="panel" id="newsCard" hidden>
+    <div class="lbl">What the society was reading · Tavily → Nemotron Super</div>
+    <ul id="newsList" class="news"></ul>
+    <div id="newsSrc" class="src"></div>
+  </div>
+</section>
+
+<!-- Interview drawer -->
+<div id="drawer" class="drawer" hidden>
+  <div class="drawer-in">
+    <button class="x" id="drawerX" aria-label="Close">×</button>
+    <div id="pCard"></div>
+    <div id="pHist" class="hist"></div>
+    <div class="chat" id="chat"></div>
+    <form id="askForm" class="ask">
+      <input id="askIn" placeholder="Ask them anything… e.g. What would change your mind?" autocomplete="off">
+      <button class="primary small">Ask</button>
+    </form>
+  </div>
+</div>
+
+<!-- Engine room -->
+<div id="engine" class="drawer" hidden>
+  <div class="drawer-in">
+    <button class="x" id="engineX" aria-label="Close">×</button>
+    <h3>Engine room · Nebius Token Factory</h3>
+    <p class="muted">Each task goes to the smallest Nemotron model that can do it well. Nano handles thousands of fast persona calls in parallel, Super does synthesis and Ultra does deep reasoning, with thinking turned on.</p>
+    <div id="engineBody"></div>
+  </div>
+</div>
+
+<footer class="foot">
+  Built on <b>NVIDIA Nemotron</b> (Nano · Super · Ultra) via <b>Nebius Token Factory</b>, with live grounding from <b>Tavily</b>.
+  Personas are sampled from Census-of-India–style distributions. This is a simulation, not a poll, so use it to find blind spots, not to replace real research.
+  Map: <a href="https://github.com/datameet/maps" target="_blank" rel="noopener">DataMeet</a> (CC BY 4.0).
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
