@@ -57,6 +57,10 @@ The **Engine room** panel in the UI shows live call counts, tokens, latency and 
 
 ## Run it locally
 
+**Fastest:** put your keys in `.env` (copy `.env.example`), then double-click `run.bat` (Windows) or run `./run.sh` (macOS/Linux) and open http://localhost:8000. In VS Code, open the folder and press **F5** ("Mirror World (uvicorn)").
+
+Manual:
+
 ```bash
 git clone https://github.com/<you>/mirror-world && cd mirror-world
 python -m venv .venv && source .venv/bin/activate
