@@ -193,6 +193,7 @@ async def run_simulation(run: Run, router: Router):
 
         state: dict[int, dict] = {}
         history: list[dict] = []
+        errors: list[str] = []
 
         async def react(p: Persona, r_idx: int, heard: list[dict]):
             prev = state.get(p.id)
@@ -213,6 +214,7 @@ async def run_simulation(run: Run, router: Router):
                 return p, _clean(await router.chat("nano", AGENT_SYSTEM, user, usage))
             except Exception as e:  # noqa: BLE001
                 print("agent fail", p.id, e)
+                errors.append(str(e)[:300])
                 return p, None
 
         rng = random.Random(run.seed)
@@ -249,6 +251,8 @@ async def run_simulation(run: Run, router: Router):
                 await run.emit({"type": "agent", "round": r_idx, "id": p.id, **res,
                                 "from": [h["id"] for h in heard_map.get(p.id, [])]})
             state = new_state
+            if not state:
+                raise RuntimeError("Every agent call failed. Check NEBIUS_API_KEY / model IDs. Last error: " + (errors[-1] if errors else "unknown"))
             m = segment_metrics(people, state)
             m["round"] = r_idx
             m["flips"] = flips

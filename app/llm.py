@@ -107,6 +107,7 @@ class Router:
         self.client = AsyncOpenAI(base_url=BASE_URL, api_key=self.api_key, timeout=180, max_retries=2) if self.api_key else None
         self.sem = asyncio.Semaphore(int(os.getenv("CONCURRENCY", concurrency)))
         self.available: list[str] = []
+        self.discovery_error = ""
 
     @property
     def live(self) -> bool:
@@ -121,6 +122,10 @@ class Router:
             ids = [m.id for m in res.data]
         except Exception as e:  # noqa: BLE001
             print("model discovery failed:", e)
+            self.discovery_error = str(e)[:300]
+            if not all(self.models.values()):
+                print("!! Could not reach Nebius Token Factory and no MODEL_* env vars set -> falling back to DEMO mode")
+                self.client = None
             return self.models
         self.available = ids
         nem = [i for i in ids if "nemotron" in i.lower()]

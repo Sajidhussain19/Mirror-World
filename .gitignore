@@ -4,3 +4,4 @@ __pycache__/
 runs/*.json
 .pytest_cache/
 .venv/
+nebius*keys*.txt

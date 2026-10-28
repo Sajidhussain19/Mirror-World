@@ -36,7 +36,8 @@ def test_classify():
     assert classify(-0.9, 0.2) == "rejected"
 
 
-def test_demo_simulation_end_to_end():
+def test_demo_simulation_end_to_end(monkeypatch):
+    monkeypatch.delenv("NEBIUS_API_KEY", raising=False)
     r = Run(id="t", proposal="A ₹15 rain surge fee on every food order", audience="urban_online",
             size=60, rounds=2, seed=1, use_news=False)
     asyncio.run(run_simulation(r, Router(api_key="")))
