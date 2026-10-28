@@ -26,16 +26,20 @@ from .personas import AUDIENCES, Persona, sample_population
 AGENT_SYSTEM = (
     "You are role-playing ONE specific Indian person in a social simulation. Stay fully in character: their income, job, "
     "age, region, values and comfort with technology shape what they notice, what they care about and how they talk. "
-    "Do NOT be balanced, polite or diplomatic. Real people are often indifferent, cynical, confused, practical or emotional. "
-    "A daily-wage worker and a software engineer react very differently. Many people barely care. "
-    "Reply with a single JSON object and nothing else."
+    "Think about YOUR OWN life first: your wallet, your time, your family, your daily routine. Not what sounds kind or "
+    "socially correct. Do NOT be balanced, polite or diplomatic, and do not virtue-signal. Real people are often "
+    "indifferent, cynical, confused, practical, suspicious of companies and governments, or simply unaffected. "
+    "A daily-wage worker and a software engineer react very differently. If it doesn't touch your life, say so. "
+    "Write your quote in simple English, or in Hinglish only if you are from a Hindi-speaking state; people from other "
+    "regions may add at most one or two words of their own language. Keep it natural and readable. "
+    "Your stance number MUST match the tone of your quote. Reply with a single JSON object and nothing else."
 )
 
 JSON_SPEC = (
     '{"stance": <integer -2 strongly against, -1 against, 0 neutral/don\'t care, 1 for, 2 strongly for>, '
-    '"adopt": <true if you would go along with it in practice (use it, buy it, keep using the service, comply), false if you would avoid, switch, resist or ignore it>, '
+    '"adopt": <what you would actually DO, not what you say: true if in practice you would go along with it (use it, buy it, keep using the service, comply). Be realistic about habits: people often complain loudly but keep using services they rely on when the cost is small relative to the convenience; they only switch or resist when it truly hurts their budget or a real alternative exists. false if you would genuinely stop, avoid, switch or resist>, '
     '"emotion": "<one word>", '
-    '"quote": "<what you would actually say to a friend about it, max 25 words, in your natural voice; Hinglish or regional phrasing is fine but write in Latin script>", '
+    '"quote": "<what you would actually say to a friend about it, max 25 words, in your natural voice; in the words someone like you would really use, written in Latin script>", '
     '"share": <true if you would forward/post/talk about this, else false>}'
 )
 
@@ -49,16 +53,20 @@ SUPER_THEMES = (
 SUPER_NEWS = (
     "You brief a simulated population on what ordinary Indians would currently be hearing about a topic. "
     "From the search results, write 3-5 short neutral bullets (max 22 words each) of real, recent context "
-    "(prices, related events, public mood, competitor moves). No opinions. Return JSON: "
+    "(prices, related events, public mood, competitor moves). No opinions. Do NOT restate or confirm the proposal itself: "
+    "it has not happened yet; only describe the surrounding context. Return JSON: "
     '{"bullets":["..."],"query_used":"..."}'
 )
 
 ULTRA_REPORT = (
     "You are a world-class strategist reading the output of a large agent-based simulation of Indian society reacting to "
-    "a proposal. Reason carefully over the numbers by segment, the themes and how opinion moved between rounds. Then give a "
+    "a proposal. Reason carefully over the numbers by segment, the themes and how opinion moved between rounds. LLM-agent "
+    "societies skew agreeable and pro-social, so discount easy approval, weigh the opposing segments heavily and "
+    "keep confidence calibrated (rarely above 85). Then give a "
     "decisive, specific verdict a CEO or policymaker could act on. Avoid platitudes. Return JSON only:\n"
     '{"headline":"<one sharp sentence verdict>",'
-    '"prediction":"embraced|accepted|rejected",'
+    '"prediction":"embraced|accepted|rejected" (embraced = broad enthusiasm AND uptake; accepted = complaints or mixed feelings but behaviour largely continues; rejected = people actually avoid or resist it, or backlash forces a reversal),'
+    '"say_do_gap":"<one sentence: how what people SAY differs from what they will actually DO, citing support vs adoption numbers>",'
     '"confidence":<0-100>,'
     '"summary":"<3 sentences: what happens, who drives it, why>",'
     '"drivers":[{"factor":"...","direction":"+|-","explanation":"<cite segment numbers>"}],'
@@ -208,10 +216,15 @@ async def run_simulation(run: Run, router: Router):
                 user = (f"{date_line}YOU ARE: {p.bio()}\n\nTHE PROPOSAL:\n\"{run.proposal}\"\n\n"
                         f"Earlier you said: \"{prev['quote']}\" (stance {prev['stance']}).\n\n"
                         f"Since then, people you know said:\n{said}\n\n"
-                        "Has your view changed? People rarely flip completely; shift only if something genuinely persuades or "
-                        f"worries you. JSON: {JSON_SPEC}")
+                        "Has your view changed? Most people keep their opinion. Your own interests matter more than what others say. "
+                        "Move at most one step, and only if one of them raised a point that genuinely matters to YOUR situation; "
+                        "hearing the opposite view can also harden you. "
+                        f"JSON: {JSON_SPEC}")
             try:
-                return p, _clean(await router.chat("nano", AGENT_SYSTEM, user, usage))
+                res = _clean(await router.chat("nano", AGENT_SYSTEM, user, usage))
+                if prev is not None:  # opinion inertia: at most one step per round
+                    res["stance"] = max(prev["stance"] - 1, min(prev["stance"] + 1, res["stance"]))
+                return p, res
             except Exception as e:  # noqa: BLE001
                 print("agent fail", p.id, e)
                 errors.append(str(e)[:300])

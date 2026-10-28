@@ -217,6 +217,7 @@ function renderReport(r) {
     <h2>${esc(r.headline)}</h2><p class="muted">${esc(r.summary)}</p>
     <div class="drivers">${drv}</div>
     ${risk ? `<div class="callout"><div class="lbl">Segments at risk</div><ul style="margin:0;padding-left:18px">${risk}</ul></div>` : ""}
+    ${r.say_do_gap ? `<div class="callout"><div class="lbl">Say vs do</div>${esc(r.say_do_gap)}</div>` : ""}
     ${r.surprise ? `<div class="callout"><div class="lbl">Non-obvious insight</div>${esc(r.surprise)}</div>` : ""}
     <div class="callout rewrite"><div class="lbl">The one change most likely to flip it</div><b>${esc(r.fix)}</b>
       <p class="muted">${esc(r.rewrite)}</p>
@@ -229,14 +230,16 @@ function renderReport(r) {
 }
 function renderBacktest(r) {
   const b = r.backtest, L = S.cfg.outcome_labels;
-  const ok = b.match_ultra;
+  const mark = (ok) => `<span class="${ok ? "ok" : "bad"}">${ok ? "✓" : "✗"}</span>`;
   $("#backtestCard").hidden = false;
-  $("#backtestCard").innerHTML = `<div class="big ${ok ? "ok" : "bad"}">${ok ? "✓" : "✗"}</div>
+  $("#backtestCard").innerHTML = `<div class="big ${b.match_sim ? "ok" : "bad"}">${b.match_sim ? "✓" : "✗"}</div>
     <div><div class="lbl">Backtest · ${esc(S.initInfo.date)}</div>
-      <div class="vs"><div class="col"><div class="lbl">Mirror World predicted</div><div class="res">${esc(L[r.prediction] || r.prediction)}</div></div>
-      <div class="col"><div class="lbl">What actually happened</div><div class="res">${esc(L[b.actual])}</div></div></div>
+      <div class="vs">
+        <div class="col"><div class="lbl">What the society did</div><div class="res">${mark(b.match_sim)} ${esc(L[r.sim_outcome] || r.sim_outcome)}</div></div>
+        <div class="col"><div class="lbl">Nemotron Ultra's verdict</div><div class="res">${mark(b.match_ultra)} ${esc(L[r.prediction] || r.prediction)}</div></div>
+        <div class="col"><div class="lbl">What actually happened</div><div class="res">${esc(L[b.actual])}</div></div></div>
       <p class="muted" style="margin:8px 0 0">${esc(b.actual_text)}</p></div>
-    <div class="muted" style="font-size:11px;max-width:200px">Agents were told the date and asked to react only with what they would have known then. The outcome was hidden from every model.</div>`;
+    <div class="muted" style="font-size:11px;max-width:210px">Agents were told the date and only knew what people knew then. The real outcome was hidden from every model. "What the society did" is computed from the agents' own behaviour, and Ultra's verdict is its own read of the same data.</div>`;
 }
 function renderAB() {
   const A = S.finals[S.parentId].final, B = S.final;

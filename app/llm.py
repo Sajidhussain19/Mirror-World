@@ -105,7 +105,7 @@ class Router:
         if models:
             self.models.update({k: v for k, v in models.items() if v})
         self.client = AsyncOpenAI(base_url=BASE_URL, api_key=self.api_key, timeout=180, max_retries=2) if self.api_key else None
-        self.sem = asyncio.Semaphore(int(os.getenv("CONCURRENCY", concurrency)))
+        self.sem = asyncio.Semaphore(int(os.getenv("CONCURRENCY", 96)))
         self.available: list[str] = []
         self.discovery_error = ""
 

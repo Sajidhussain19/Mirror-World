@@ -172,6 +172,16 @@ async def ask(rid: str, req: AskReq):
     return {"answer": ans.strip().strip('"')}
 
 
+@app.get("/api/runs")
+async def list_runs():
+    out = []
+    for r in RUNS.values():
+        last = next((e for e in reversed(r.events) if e.get("type") in ("phase", "error", "done")), {})
+        out.append({"id": r.id, "proposal": r.proposal[:60], "done": r.done, "events": len(r.events),
+                    "status": last.get("label") or last.get("message") or last.get("type"), "backtest": r.backtest_id})
+    return out
+
+
 @app.get("/healthz")
 async def health():
     return {"ok": True, "mode": "live" if router.live else "demo"}

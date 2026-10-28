@@ -47,13 +47,23 @@ Mirror World gives a product manager, a policy analyst or a founder a **1,000-pe
 
 | Tier | Model (auto-discovered, overridable) | Used for | Volume per 1,000-agent run |
 |---|---|---|---|
-| **Nano** | `MODEL_NANO` | Persona reactions, word-of-mouth updates, interviews | ~2,000–3,000 calls, run in parallel |
-| **Super** | `MODEL_SUPER` | Search-query writing, news brief, theme clustering | 3 calls |
-| **Ultra** | `MODEL_ULTRA` | Final reasoning, root causes, rewrite | 1 call (thinking on) |
+| **Nano** | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` | Persona reactions, word-of-mouth updates, interviews | ~2,000–3,000 calls, run in parallel |
+| **Super** | `nvidia/nemotron-3-super-120b-a12b` | Search-query writing, news brief, theme clustering | 3 calls |
+| **Ultra** | `nvidia/Nemotron-3-Ultra-550b-a55b` | Final reasoning, root causes, rewrite | 1 call (thinking on) |
 
 The **Engine room** panel in the UI shows live call counts, tokens, latency and throughput for each tier.
 
 **Where Token Factory sped things up:** the whole product depends on cheap, highly concurrent inference. A 1,000-agent, 3-round simulation is about 2,500 LLM calls. Token Factory's OpenAI-compatible API let us fire them with 64-way concurrency from one async Python process and route each tier to a different Nemotron model with no extra infrastructure. Nano's speed is what makes the map animate in real time.
+
+## Backtest results (live, 300 agents, 3 rounds)
+
+| Decision | What the society did | Nemotron Ultra verdict | What actually happened |
+|---|---|---|---|
+| Facebook Free Basics (Dec 2015) | ✓ Rejected (net −0.06, 42% go along) | ✓ Rejected | Rejected: TRAI ban, Feb 2016 |
+| Zomato ₹2 platform fee (Aug 2023) | ✓ Grudgingly accepted (only 15% support, yet 45% keep ordering) | ✓ Accepted | Accepted: raised to ₹10 by Oct 2024 |
+| Instagram Reels after TikTok ban (Jul 2020) | ✓ Embraced (71% adopt) | ✗ Accepted | Embraced |
+
+The Zomato case is the **say/do gap** in action. Agents say they hate the fee but keep ordering, which is exactly what happened. Getting there took two honest fixes, both recorded in the git history: **opinion inertia** (agents move at most one step per round) and **behavioural realism** (`adopt` asks what you'd *do*, not what you'd *say*). Three cases is a sanity check, not a validation study.
 
 ## Run it locally
 

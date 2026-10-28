@@ -2,11 +2,18 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Mirror World (uvicorn)",
+      "name": "Run Mirror World",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cmd /c run.bat",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Mirror World (Python debugger)",
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["app.main:app", "--port", "8000", "--reload"],
+      "args": ["app.main:app", "--port", "8000"],
       "envFile": "${workspaceFolder}/.env",
       "jinja": false
     }
