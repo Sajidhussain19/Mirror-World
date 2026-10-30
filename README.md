@@ -7,7 +7,7 @@ Type a policy, a price change, a product launch or an ad. Mirror World creates a
 > Built for the **Nebius × NVIDIA Global AI Hackathon** · Track: **Best Apps and Agents**
 > Runs on **Nebius Token Factory** with **NVIDIA Nemotron Nano, Super & Ultra**, plus **Tavily** for live grounding.
 
-🔗 **Live demo:** _<your deployed URL>_ · 🎬 **Video:** https://youtu.be/eV12yJtuzk0
+🔗 **Live demo:** https://mirror-world.onrender.com · 🎬 **Video:** https://youtu.be/eV12yJtuzk0
 
 ---
 
