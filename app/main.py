@@ -116,6 +116,8 @@ async def events(rid: str, replay_speed: float = 1.0):
                     last_t = ev.get("t", 0)
                     if ev["type"] == "agent":
                         dt = min(dt, 0.012)
+                    elif ev["type"] == "usage":
+                        dt = 0.0
                     await asyncio.sleep(min(dt, 0.6))
                 yield {"data": json.dumps(ev)}
                 i += 1
